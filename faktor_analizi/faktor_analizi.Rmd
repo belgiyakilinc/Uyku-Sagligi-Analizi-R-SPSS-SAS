@@ -1,0 +1,52 @@
+---
+title: "faktor_analizi"
+output: html_document
+---
+
+```{r}
+veri <- read.csv("veri_deneme.csv", sep = ";")
+veri_fac <- veri[,c("Age","Quality_Sleep","Stress_Level","Heart_Rate")]
+
+```
+
+
+
+```{r}
+#Faktor Analizi Uygulanabilirligi (KMO - Anti-Image - Bartlett Test)
+library(psych)
+KMO(veri_fac) # KMO ve MSA Anti-image matris kosegenleri
+```
+
+```{r}
+#Bartlett Küresellik Testi(Bartlett's Test of Spherecity) 
+#install.packages("psych")
+cortest.bartlett(cor(veri_fac),nrow(veri_fac)) #Bartlett test 
+```
+
+
+```{r}
+#Temel Bilesenler Analizi Yöntemi(Kok lambda yaklasimi) secilerek faktor analizi
+df1 <- principal(veri_fac, nfactors =1, rotate = "none")
+print(df1$loadings, digits=3, cutoff=.3, sort=TRUE)
+```
+
+```{r}
+df1$communality 
+```
+### Age değişkeni 0.5'den küçük olduğu için çıkartılmalı.
+
+```{r}
+plot(df1$values, type="b", main="ScreePlot", xlab="Number of Factors", ylab="Eigenvalues")
+```
+
+
+
+
+
+
+
+
+
+
+
+

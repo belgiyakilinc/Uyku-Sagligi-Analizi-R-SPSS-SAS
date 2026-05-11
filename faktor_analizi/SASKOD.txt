@@ -1,0 +1,22 @@
+libname data "/home/u63667136/";
+
+proc import datafile="/home/u63667136/veri.csv"
+out=veri dbms=csv replace; 
+getnames=yes; 
+run;
+
+proc factor data=veri /*name of data file*/
+ nobs=411 /*number of observations*/
+ corr /*print correlation matrix*/
+ /*priors=max  types of priors to be used*/
+ method=principal /*method of extraction*/
+ nfactors=2 /*number of factors to retain*/
+ maxiter = 25 /*maximum number of iterations*/
+ rotate=varimax reorder/*type of rotation */
+ msa
+ scree /*print of scree plot*/
+ preplot
+ plot
+ heywood;/*sets to 1 any communality greater than 1, allowing iterations to proceed*/
+ var Age Quality_Sleep Stress_Level Heart_Rate; /*variables to be included*/
+run;
