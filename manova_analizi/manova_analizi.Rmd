@@ -1,0 +1,191 @@
+---
+title: "manova"
+output: html_document
+date: ""
+---
+
+### kütüphanelerin yüklenmesi
+
+```{r}
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
+library(broom)
+library(dplyr)
+library(tidyr)
+library(haven)
+library(effectsize)
+library(heplots)
+```
+
+### verinin yüklenmesi
+
+```{r}
+
+veri <- read.csv("veri_deneme.csv", sep = ";")
+```
+
+### faktörlerin oluşturulması
+
+```{r}
+veri$Gender<-factor(veri$Gender,levels = c(1,2),labels=c("Male","Female"))
+veri$Sleep_Disorder<-factor(veri$Sleep_Disorder,levels = c(1,2,3),labels=c("Yok","Sleep Apnea","Insomnia"))
+veri$Sleep_Duration <- as.numeric(gsub(",", ".", veri$Sleep_Duration))
+
+```
+
+
+```{r}
+str(veri)
+```
+
+
+
+### Grup gozlem dagilimi
+
+```{r}
+veri %>%
+  group_by(Gender) %>%
+  summarise(N = n())
+```
+
+#### Degiskenlere Göre Ortalamalar ve Ortalama Çizimleri
+
+#### Mevki duzeyleri bazında degisken ortalamaları ve sapmalar
+
+```{r}
+veri %>% 
+  group_by(Gender) %>%
+  summarise(across(-Sleep_Disorder, list(mean=mean,sd=sd)))
+```
+
+# Gender icin :
+
+```{r}
+library(gplots)
+plotmeans(Age~Gender,xlab="Gender",ylab="Age", main="Mean Plot\nwith 95% CI",data=veri)
+plotmeans(Sleep_Duration~Gender, xlab="Gender",ylab="Sleep_Duration", main="Mean Plot\nwith 95% CI",data=veri)
+plotmeans(Quality_Sleep~Gender, xlab="Gender",ylab="Quality_Sleep ", main="Mean Plot\nwith 95% CI",data=veri)
+```
+
+# Sleep_Disorder icin :
+
+```{r}
+plotmeans(Age~Sleep_Disorder,xlab="Sleep_Disorder",ylab="Age", main="Mean Plot\nwith 95% CI",data=veri)
+plotmeans(Sleep_Duration~Sleep_Disorder, xlab="Sleep_Disorder",ylab="Sleep_Duration", main="Mean Plot\nwith 95% CI",data=veri)
+plotmeans(Quality_Sleep~Sleep_Disorder, xlab="Sleep_Disorder",ylab="Quality_Sleep ", main="Mean Plot\nwith 95% CI",data=veri)
+```
+
+#Multivariate Normality
+
+```{r}
+library(dplyr)
+veri %>%
+  dplyr::select(Age,Sleep_Duration,Quality_Sleep) %>%
+  mshapiro_test()
+```
+
+#Homogeneity of Covariances Gender için
+
+```{r}
+library(biotools)
+box_m(veri[, c("Age","Sleep_Duration","Quality_Sleep")], veri$Gender)
+```
+
+#Homogeneity of Covariances Sleep_Disorder için
+
+```{r}
+library(biotools)
+box_m(veri[, c("Age","Sleep_Duration","Quality_Sleep")], veri$Sleep_Disorder)
+```
+
+# MANOVA Sleep_Disorder için
+
+```{r}
+veri_manova2 <- manova(cbind(Age,Sleep_Duration,Quality_Sleep) ~ Sleep_Disorder ,data=veri)
+
+summary(veri_manova2, test = "Pillai")
+```
+
+# MANOVA Gender için
+
+```{r}
+veri_manova1 <- manova(cbind(Age,Sleep_Duration,Quality_Sleep) ~ Gender,data=veri)
+
+# summary(veri_manova1, test = "Pillai")
+summary(veri_manova1, test = "Hotelling-Lawley")
+```
+
+## Partial Eta Squared Sleep_Disorder için
+
+```{r}
+etasq(veri_manova2, test="Pillai")
+```
+
+## Partial Eta Squared Sleep_Disorder için
+
+```{r}
+etasq(veri_manova1, test="Pillai")
+```
+
+#Homogeneity of variance- Levene's Test
+
+```{r}
+veri %>% 
+  pivot_longer( c(Age,Sleep_Duration,Quality_Sleep),names_to = "variable", values_to = "value") %>%
+  group_by(variable) %>%
+  levene_test(value ~ Sleep_Disorder,center=mean)
+```
+
+### Test of Between Subjects Gender için
+
+```{r}
+summary.aov(veri_manova1)
+```
+
+### Test of Between Subjects Sleep_Disorder için
+
+```{r}
+summary.aov(veri_manova2)
+```
+
+#Levene- Not equal variances - Games Howell gender için
+
+```{r}
+m_gh_3 <- veri %>%
+  pivot_longer( c(Age,Sleep_Duration,Quality_Sleep),names_to = "variables", values_to = "value") %>%
+  group_by(variables) %>%
+  games_howell_test(value ~ Gender,) 
+m_gh_3<-m_gh_3[,c(1,4,3,6:9)]
+m_gh_3
+
+```
+
+#Levene- Not equal variances - Games Howell sleep disorder için
+
+```{r}
+m_gh_3 <- veri %>%
+  pivot_longer( c(Age,Sleep_Duration,Quality_Sleep),names_to = "variables", values_to = "value") %>%
+  group_by(variables) %>%
+  games_howell_test(value ~ Sleep_Disorder,) 
+m_gh_3<-m_gh_3[,c(1,4,3,6:9)]
+m_gh_3
+
+```
+
+```{r}
+attach(veri)
+interaction.plot(Sleep_Disorder,Gender,Age, fun=mean, type="l", legend=TRUE,col=1:3, lwd=2)
+interaction.plot(Sleep_Disorder,Gender,Sleep_Duration, fun=mean, type="l", legend=TRUE, col=1:3,lwd=2)
+interaction.plot(Sleep_Disorder,Gender,Quality_Sleep, fun=mean, type="l", legend=TRUE, col=1:3,lwd=2)
+detach(veri)
+
+```
+
+
+
+
+
+
+
+

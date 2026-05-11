@@ -1,0 +1,45 @@
+libname data "/home/u63667136/";
+
+proc import datafile="/home/u63667136/veri.csv"
+out=veri dbms=csv replace; 
+getnames=yes; 
+run;
+
+data Manova;
+set veri;
+lnrestingBP=log(Age);
+lnserumcholestrol=log(Sleep_Duration);
+lnmaxheartrate=log(Quality_Sleep);
+lnoldpeak=log(Activity_Level);
+run;
+
+proc means data = Manova;
+  var Age Sleep_Duration Quality_Sleep Activity_Level;
+run;
+
+proc freq data = Manova;
+  table Sleep_Disorder;
+run;
+
+proc discrim data=Manova pool=test ;
+var Age Sleep_Duration Quality_Sleep Activity_Level;
+classes Sleep_Disorder;
+run;
+
+/*Tek yoklu manova*/
+proc glm data = Manova ;
+  class chestpain;
+  model lnAge lnSleep_Duration lnQuality_Sleep lnActivity_Level = Sleep_Disorder / SS3;
+  manova h = Sleep_Disorder;
+  means Sleep_Disorder/tukey;
+run;
+
+/*etkilesimli*/
+proc glm data = Manova;
+  class Sleep_Disorder restingrelectro;
+  model lnAge lnSleep_Duration lnQuality_Sleep lnActivity_Level = Sleep_Disorder restingrelectro restingrelectro*Sleep_Disorder /SS3;
+  manova h = chestpain restingrelectro restingrelectro*chestpain;
+  means restingrelectro Sleep_Disorder restingrelectro*Sleep_Disorder/tukey ;
+run;
+
+
