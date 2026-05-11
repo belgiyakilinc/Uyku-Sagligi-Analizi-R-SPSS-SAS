@@ -1,0 +1,69 @@
+proc import datafile="/home/u63667136/veri.csv"
+out=veri dbms=sav replace; 
+getnames=yes; 
+run;
+
+
+/*Hiyerarşik Kümeleme Analizi*/
+proc cluster data=import method=centroid outtree=centroid plots(maxpoints=1000) ; 
+
+ID veri; 
+VAR Age Sleep_Duration Sleep_Quality Activity_Level Stress_Level Heart_Rate Daily_Steps; /*Analize girecek değişkenlerin adları*/
+run;
+
+
+/*25. Satırın veri setinden çıkarılması*/
+
+
+								/*K-MEANS KÜMELEME ANALİZİ*/
+proc fastclus data=WORK.IMPORT2 maxiter=10 maxclusters=3 list distance out=clust; 
+	var Age Sleep_Duration Sleep_Quality Activity_Level Stress_Level Heart_Rate Daily_Steps;
+	id veri_csv;
+run;
+/*maxcluster=k
+ list= Gözlemlerin hangi kümeye atandığı listesini çıktıya ekler
+ distance=Küme merkezleri arasındaki uzaklığı çıktıya ekler 
+ out= Küme atanmalarını ve küme merkezine olan uzaklıklarını veri setine kaydeder (clust adında) */
+
+
+
+/*Değişkenlerin kümelemede anlamlı olup olmadığını görmek için glm komutu kullanılıyor */
+proc glm data=clust; 
+class cluster;
+model Age=cluster;
+run;
+
+proc glm data=clust; 
+class cluster;
+model Sleep_Duration=cluster;
+run;
+
+proc glm data=clust; 
+class cluster;
+model Sleep_Quality=cluster;
+run;
+
+proc glm data=clust; 
+class cluster;
+model Activity_Level=cluster;
+run;
+
+proc glm data=clust; 
+class cluster;
+model Stress_Level=cluster;
+run;
+
+proc glm data=clust; 
+class cluster;
+model Heart_Rate=cluster;
+run;
+
+proc glm data=clust; 
+class cluster;
+model Daily_Steps=cluster;
+run;
+
+
+
+
+

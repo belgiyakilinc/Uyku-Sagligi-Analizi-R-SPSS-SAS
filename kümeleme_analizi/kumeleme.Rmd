@@ -1,0 +1,76 @@
+---
+title: "kumeleme"
+output: html_document
+date: ""
+---
+
+
+```{r}
+veri <- read.csv("veri.csv", sep = ";")
+```
+
+
+```{r}
+veri$Sleep_Duration <- as.numeric(gsub(",", ".", veri$Sleep_Duration))
+```
+
+
+```{r}
+str(veri)
+
+```
+
+
+```{r}
+df1 <- veri[,c("Age","Sleep_Duration","Quality_Sleep","Activity_Level","Stress_Level","Heart_Rate","Daily_Steps")]
+```
+
+```{r}
+library(dendextend)
+```
+
+
+```{r}
+cor_matris <- cor(df1)
+print(cor_matris)
+```
+
+```{r}
+d <- dist(df1, method = "euclidean")
+fit <- hclust(d, method="ward.D") 
+dend<-as.dendrogram(fit) 
+plot(dend)
+```
+
+
+
+```{r}
+geneldend<-dend %>%
+  set("branches_lwd", 2) %>%
+  set("branches_k_color", k = 3)%>%
+  set("labels_cex", 1.2)%>%
+  set("labels_colors",k=3)
+plot(geneldend,font.axis = 2, type="triangle")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
