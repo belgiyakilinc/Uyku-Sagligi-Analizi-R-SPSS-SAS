@@ -1,0 +1,25 @@
+libname data "/home/u63667136/";
+
+proc import datafile="/home/u63667136/veri.csv"
+out=veri dbms=csv replace; 
+getnames=yes; 
+run;
+
+proc freq data=veri;
+  tables target;
+run;
+
+proc corr data=veri spearman; 
+var Age Sleep_Duration Quality_Sleep Activity_Level;
+run;
+
+proc discrim data=veri can simple pool=test;
+class target;
+var Age Sleep_Duration Quality_Sleep Activity_Level;
+priors proportional;
+run;
+
+proc stepdisc method=stepwise  data=veri;
+class target;
+var Age Sleep_Duration Quality_Sleep Activity_Level;
+run;

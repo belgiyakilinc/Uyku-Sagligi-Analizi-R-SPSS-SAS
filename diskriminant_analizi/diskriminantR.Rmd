@@ -1,0 +1,117 @@
+---
+title: "diskriminantR"
+output: html_document
+---
+
+```{r}
+veri <- read.csv("veri.csv", sep = ";")
+
+
+veri$Age <- as.numeric(veri$Age)
+veri$Heart_Rate <- as.numeric(veri$Heart_Rate)
+veri$Quality_Sleep <- as.numeric(veri$Quality_Sleep)
+veri$Activity_Level <- as.numeric(veri$Activity_Level)
+```
+
+```{r}
+colnames(veri)
+```
+
+```{r}
+str(veri)
+```
+
+```{r}
+veri$Sleep_Duration <- as.numeric(gsub(",", ".", veri$Sleep_Duration))
+```
+
+
+```{r}
+str(veri)
+
+```
+
+```{r}
+df1 <- veri[,c("Age","Sleep_Duration","Quality_Sleep","Activity_Level")]
+```
+
+  
+```{r}
+library(corrplot)
+corrplot(cor(df1, method = "spearman"), method="number",type="upper")
+```
+
+
+```{r}
+veri$Sleep_Disorder<- factor(veri$Sleep_Disorder,levels =c(1,2,3),labels=c("yok","sleep apnea","insomnia"))
+```
+
+
+
+## Homogeneity of Covariances
+
+```{r}
+library(biotools)
+
+boxM(df1, veri$Sleep_Disorder)
+
+```
+
+HO: Var-Cov matrisi homojendir. HA: Var-Cov matrisi homojen değildir. P-Value= 0.000 < α HO RED EDİLİR. Varyans-Kovaryans matrisi homojen değildir. Bu aşamada homojenlik varsayımı altında analize devam edilmiştir.
+
+
+```{r}
+#Linear Discriminant Analysis - Binary-class
+library(MASS) 
+disk1 <- lda(Sleep_Disorder ~ Age+Activity_Level+Quality_Sleep+Sleep_Duration, data=veri) 
+disk1
+```
+
+
+```{r}
+cons<-apply(df1, 2, mean)
+(-cons)%*%(disk1$scaling)
+```
+
+### Grup tahmini
+
+```{r}
+lda_pred<- predict(disk1)
+lda_pred$class 
+```
+
+
+
+```{r}
+ldahist(lda_pred$x, g = veri$Sleep_Disorder) 
+```
+
+
+```{r}
+#Çapraz Tablonun olusturulmasi
+tablo<-table(veri$Sleep_Disorder,lda_pred$class)
+tablo
+```
+
+```{r}
+#Dogru siniflanma orani
+classrate<-sum(diag(tablo))/sum(tablo)
+classrate
+```
+
+Uyku bozukluğu olmayan 219 kişinin 192’si doğru atanmıştır.
+Uyku apnesi olan 78 kişinin 59’u doğru atanmıştır. 
+Insomniası olan 77 kişinin 67’si doğru atanmıştır. 
+genel başarı oranı %86
+
+
+
+
+```{r}
+#Nispi sans kriteri p1^2+p^2
+disk1$prior[1]^2 + disk1$prior[2]^2
+```
+
+%38,6, başarı oranının bu orandan yüksek olmasını beklenir
+
+
