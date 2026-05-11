@@ -1,0 +1,231 @@
+---
+title: "çda proje"
+output: html_document
+date: ""
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+### 1. Veri Setine Genel Bakışı:
+
+Uyku Sağlığı ve Yaşam Tarzı Veri Seti, uyku ve günlük alışkanlıklarla ilgili çok çeşitli değişkenleri kapsayan 374 satır ve 13 sütundan oluşur.
+Cinsiyet, yaş, meslek, uyku süresi, uyku kalitesi, fiziksel aktivite seviyesi, stres seviyeleri, BMI kategorisi, kan basıncı, kalp hızı, günlük adımlar ve uyku bozukluklarının varlığı veya yokluğu gibi ayrıntıları içerir.
+
+### Veri Seti Sütunları:
+
+> -   Kişi Kimliği: Her bir birey için bir tanımlayıcı.
+> -   Cinsiyet: Kişinin cinsiyeti (Erkek/Kadın).
+> -   Yaş: Kişinin yıl cinsinden yaşı.
+> -   Meslek: Kişinin mesleği veya işi.
+> -   Uyku Süresi (saat): Kişinin günde uyuduğu saat sayısı.
+> -   Uyku Kalitesi (ölçek: 1-10): Uyku kalitesinin 1 ile 10 arasında değişen öznel bir değerlendirmesi.
+> -   Fiziksel Aktivite Seviyesi (dakika/gün): Kişinin günlük olarak fiziksel aktivitede bulunduğu dakika sayısı.
+> -   Stres Seviyesi (ölçek: 1-10): Kişinin deneyimlediği stres seviyesinin 1 ile 10 arasında değişen öznel bir değerlendirmesi.
+> -   BMI Kategorisi: Kişinin BMI kategorisi (örn. Düşük Kilolu, Normal, Fazla Kilolu).
+> -   Kan Basıncı (sistolik/diyastolik): Kişinin kan basıncı ölçümü, sistolik basıncın diyastolik basınca oranı olarak gösterilir.
+> -   Kalp Hızı (bpm): Kişinin dinlenme kalp hızı, dakikadaki atış sayısı cinsinden.
+> -   Günlük Adım Sayısı: Kişinin günde attığı adım sayısı.
+> -   Uyku Bozukluğu: Kişide uyku bozukluğunun varlığı veya yokluğu (Yok, Uykusuzluk, Uyku Apnesi).
+
+### Uyku Bozukluğu Sütunu Hakkında Detaylar:
+
+> -   Yok: Kişide spesifik bir uyku bozukluğu görülmemektedir.
+>
+> -   Uyku bozukluğu: Kişi uykuya dalmada veya uykuyu sürdürmede zorluk yaşar, bu da yetersiz veya kalitesiz uykuya yol açar.
+>
+> -   Uyku Apnesi: Kişinin uyku sırasında solunum durması sonucu uyku düzeninin bozulması ve potansiyel sağlık risklerinin ortaya çıkmasıdır.
+
+## 2. VERİ ANALİZİ
+
+## 2.1 Verinin yüklenmesi
+
+```{r}
+library(readr)
+veri <- read_delim("veri.csv", delim = ",", 
+    escape_double = FALSE, trim_ws = TRUE)
+View(veri)
+```
+
+### 2.2 Boş veri kontrolü
+
+```{r}
+bos_veri<- is.na(veri)
+sum(bos_veri)
+```
+
+Boş veri bulunmamaktadır.
+
+### 2.3 Veri hakkında genel bilgiler ve veriyi tanımlayan grafikler
+
+```{r}
+str(veri)
+```
+
+### 2.3 Sayısal Veriler Hakkında Sütun Grafikleri
+
+```{r}
+library(funModeling)
+plot_num(veri)
+```
+
+## 3 Değişkenlerin Çarpıklık ve Basıklık İncelemeleri
+
+### 3.1 Age değişkeni için çarpıklık ve basıklık
+
+```{r}
+library(e1071)
+skewness(veri$Age)
+```
+
+```{r}
+kurtosis(veri$Age)
+```
+
+Age değişkeni için sağa çarpık, basıklık için ise mutlak değerce 3’ten küçük olduğu için basık ifadeleri kullanılabilir.
+
+### 3.2 Sleep Duration değişkeni için çarpıklık ve basıklık
+
+```{r}
+skewness(veri$`Sleep Duration`)
+```
+
+```{r}
+kurtosis(veri$`Sleep Duration`)
+```
+
+Sleep Duration değişkeni için hafif sağa çarpık, basıklık için ise mutlak değerce 3’ten küçük olduğu için basık ifadeleri kullanılabilir.
+
+### 3.3 Quality of Sleep değişkeni için çarpıklık ve basıklık
+
+```{r}
+skewness(veri$`Quality of Sleep`)
+```
+
+```{r}
+kurtosis(veri$`Quality of Sleep`)
+```
+
+Quality of Sleep değişkeni için sola çarpık, basıklık için ise mutlak değerce 3’ten küçük olduğu için basık ifadeleri kullanılabilir.
+
+### 3.4Physical Activity Level değişkeni için çarpıklık ve basıklık
+
+```{r}
+skewness(veri$`Physical Activity Level`)
+```
+
+```{r}
+kurtosis(veri$`Physical Activity Level`)
+```
+
+Physical Activity Level değişkeni için sağa çarpık, basıklık için ise mutlak değerce 3’ten küçük olduğu için basık ifadeleri kullanılabilir.
+
+### 4. Cinsiyet için pasta grafiği
+
+```{r}
+cinsiyet <- table(veri$Gender)
+cinsiyet_df <- data.frame(cinsiyet = names(cinsiyet), sayi = as.numeric(cinsiyet))
+cinsiyet_df$yuzde <- round(cinsiyet_df$sayi / sum(cinsiyet_df$sayi) * 100, 1)
+```
+
+```{r}
+library(ggplot2)
+ggplot(cinsiyet_df, aes(x = "", y = sayi, fill = cinsiyet)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start = 0) +
+  labs(title = "Cinsiyet Dağılımı") +
+  geom_text(aes(label = paste0(yuzde, "%")), position = position_stack(vjust = 0.5)) +
+  theme_void()
+```
+
+### 5. Heart Rate değişkeni için box plot grafiği
+
+```{r}
+boxplot(veri$`Heart Rate`, notch = FALSE, outline = FALSE, horizontal = FALSE, col = "red")
+
+```
+
+### 5.1 Daily Steps değişkeni için box plot grafiği
+
+```{r}
+boxplot(veri$`Daily Steps`, notch = FALSE, outline = FALSE, horizontal = FALSE, col = "lightblue")
+```
+
+## 6. NORMAL DAĞILIM TESTİ
+
+### 6.1 AGE
+
+```{r}
+ks.test(veri$Age, "pnorm", mean(veri$Age), sd(veri$Age))
+```
+
+HO: Age değişkeni normal dağılmaktadır.
+HA: Age değişkeni normal dağılmamaktadır.
+p= 0.008389 \< 0.05 Ho RED EDİLİR. Değişken normal dağılmamaktadır.
+AGE değişkeni için dönüşüm, SPSS uygulaması üzerinden yapılacaktır.
+
+### 6.2 SLEEP DURATİON
+
+```{r}
+ks.test(veri$`Sleep Duration`, "pnorm", mean(veri$`Sleep Duration`), sd(veri$`Sleep Duration`))
+```
+
+HO: SLEEP DURATİON değişkeni normal dağılmaktadır.
+HA: SLEEP DURATİON değişkeni normal dağılmamaktadır.
+p= 9.802e-06 \< 0.05 Ho RED EDİLİR. Değişken normal dağılmamaktadır.
+SLEEP DURATİON değişkeni için dönüşüm, SPSS uygulaması üzerinden yapılacaktır.
+
+### 6..3 Quality of Sleep
+
+```{r}
+ks.test(veri$`Quality of Sleep`, "pnorm", mean(veri$`Quality of Sleep`), sd(veri$`Quality of Sleep`))
+```
+
+HO: Quality of Sleep değişkeni normal dağılmaktadır.
+HA: Quality of Sleep değişkeni normal dağılmamaktadır.
+p= 3.333e-13\< 0.05 Ho RED EDİLİR. Değişken normal dağılmamaktadır.
+Quality of Sleep değişkeni için dönüşüm, SPSS uygulaması üzerinden yapılacaktır.
+
+### 6.4 Physical Activity Level
+
+```{r}
+ks.test(veri$`Physical Activity Level`, "pnorm", mean(veri$`Physical Activity Level`), sd(veri$`Physical Activity Level`))
+```
+
+HO: Physical Activity Level değişkeni normal dağılmaktadır.
+HA: Physical Activity Level değişkeni normal dağılmamaktadır.
+p= 5.074e-08 \< 0.05 Ho RED EDİLİR. Değişken normal dağılmamaktadır.
+Physical Activity Level değişkeni için dönüşüm, SPSS uygulaması üzerinden yapılacaktır.
+
+### 6.5 Stress Level
+
+```{r}
+ks.test(veri$`Stress Level`, "pnorm", mean(veri$`Stress Level`), sd(veri$`Stress Level`))
+```
+
+HO: Stress Level değişkeni normal dağılmaktadır.
+HA: Stress Level değişkeni normal dağılmamaktadır.
+p= 1.099e-08 \< 0.05 Ho RED EDİLİR. Değişken normal dağılmamaktadır.
+Stress Level değişkeni için dönüşüm, SPSS uygulaması üzerinden yapılacaktır.
+
+### 6.6 Heart Rate
+
+```{r}
+ks.test(veri$`Heart Rate`, "pnorm", mean(veri$`Heart Rate`), sd(veri$`Heart Rate`))
+```
+
+HO: Heart Rate değişkeni normal dağılmaktadır.
+HA: Heart Rate değişkeni normal dağılmamaktadır.
+p= 8.833e-09 \< 0.05 Ho RED EDİLİR. Değişken normal dağılmamaktadır.
+Heart Rate değişkeni için dönüşüm, SPSS uygulaması üzerinden yapılacaktır.
+
+### 6.7 Daily Steps
+
+```{r}
+ks.test(veri$`Daily Steps`, "pnorm", mean(veri$`Daily Steps`), sd(veri$`Daily Steps`))
+```
+
+HO: Daily Steps değişkeni normal dağılmaktadır.
+HA: Daily Steps değişkeni normal dağılmamaktadır.
+p= 1.943e-06 \< 0.05 Ho RED EDİLİR. Değişken normal dağılmamaktadır.
+Daily Steps değişkeni için dönüşüm, SPSS uygulaması üzerinden yapılacaktır.
