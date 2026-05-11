@@ -1,0 +1,184 @@
+---
+title: "log_reg"
+output: html_document
+
+---
+
+```{r}
+veri <- read.csv("dataset.csv", sep = ";")
+```
+
+
+```{r}
+colnames(veri)
+```
+
+
+```{r}
+veri$Sleep_Disorder<- factor(veri$Sleep_Disorder,levels =c(1,2),labels=c("yok","yok"))
+
+```
+
+```{r}
+str(veri)
+```
+
+
+```{r}
+df1 <- veri[,c("Age","Stress_Level","Quality_Sleep","Physical_Activity","Heart_Rate")]
+```
+
+
+```{r}
+library(corrplot)
+corrplot(cor(df1, method = "spearman"), method="number",type="upper")
+```
+
+```{r}
+library(tidyverse) 
+library(modelr)    
+library(broom)   
+```
+
+
+#Logistic Regresyon 
+
+```{r}
+m1 <- glm(Sleep_Disorder ~Age+Stress_Level+Quality_Sleep+Heart_Rate, family = "binomial", data = veri)
+summary(m1)
+```
+
+
+```{r}
+#Ki-kare istatistginin hesabi
+m1$deviance
+m1$null.deviance
+kikare<- m1$null.deviance-m1$deviance
+kikare
+```
+
+```{r}
+#serbestlik derecesi hesabi
+m1$df.null
+m1$df.residual
+df<-m1$df.null-m1$df.residual
+df
+```
+
+```{r}
+#Ki kare istatistigine ait p degerinin hesabi (p<0.05 ise eklenen degiskenlerin modele katkisi anlamlidir.)
+kikare.p<- 1 - pchisq(kikare,df)
+kikare.p
+```
+
+bağımsız değişkenler bağımlı değişkene anlamlı bir katkısı yoktur. 
+
+
+###Hoshmer Lemeshov hesabi (p>0.05 ise model anlamlD1dD1r. yani model veriye uyumludur.)
+
+```{r}
+library(ResourceSelection)
+hoslem.test(m1$y,fitted(m1))
+```
+
+model veriye uyumlu değildir. 
+
+```{r}
+library("DescTools")
+
+# PseudoR2(m1, which = c("CoxSnell","Nagelkerke","McFadden"))
+```
+Model veriye uyumlu olmadığı için kod çalışmıyor. 
+
+
+```{r}
+#Cox and Snell R^2
+
+R.cs <- 1 - exp ((m1$deviance - m1$null.deviance))
+R.cs
+```
+
+```{r}
+#Model katsayilarinin exponential alinmis hali ve gC<ven araliklari
+exp(coef(m1))
+exp(confint.default(m1,level = 0.95)) 
+```
+
+
+```{r}
+#Atama Tablosu
+type_pred<-fitted(m1)
+typefac<- ifelse(type_pred>0.5,"Yok","Var")
+t_tab <- table(veri$Sleep_Disorder, typefac)
+t_tab
+```
+
+buradaki if modeli bozdu. 0,5 altında kaldığı için bütün veriyi tek bir hale getirdi. düzeltemedim :(
+
+
+```{r}
+#Toplam Dogru Atanma YC<zdesi
+sum(diag(t_tab)) / sum(t_tab)
+```
+
+
+```{r}
+#Atama Tablosu GC6rselleeştirme
+library(cvms)
+library(ggplot2)
+library(broom)    # tidy()
+library(tibble)   # tibble()
+datatib <- tibble("target" = veri$Sleep_Disorder,"prediction" = typefac)
+datatib
+basic_table <- table(datatib)
+basic_table
+cfm <- tidy(basic_table)
+cfm
+```
+
+
+```{r}
+
+#Stepwise YC6ntemler ile Lojistik Regresyon
+library(MASS)
+step_model<-step(m1,direction="both") #direction=c("backward","forward","both") 
+step_model
+summary(step_model)
+exp(step_model$coefficients)
+exp(confint.default(step_model,level = 0.95)) 
+
+```
+
+
+```{r}
+#Atama Tablosu
+type_pred<-fitted(step_model)
+typefac<- ifelse(type_pred>0.5,"B","A")
+t_tab <- table(veri$Sleep_Disorder, typefac)
+t_tab
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

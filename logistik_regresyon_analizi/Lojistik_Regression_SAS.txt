@@ -1,0 +1,23 @@
+proc import datafile="/home/u63667136/veri.csv"
+out=veri dbms=csv replace; 
+getnames=yes; 
+run;
+
+
+
+/* Binary Lojistik Regresyon*/
+proc logistic data=veri ;
+model type(ref="A") = Age Stress_Level Quality_Sleep Physical_Activity Heart_Rate /expb lackfit rsquare  ;
+output out=outdata predprobs=(individual);
+run;
+
+proc freq data=outdata;
+tables _FROM_*_INTO_;
+run;
+
+/* Stepwise Lojistik Regresyon*/
+proc logistic data=veri ;
+model type(ref="A") = Age Stress_Level Quality_Sleep Physical_Activity Heart_Rate /expb lackfit rsquare selection=backward;
+output out=outdata2 p=pred_prob;
+run;
+
